@@ -1,12 +1,16 @@
 #include "FS.h"
 #include "SD_MMC.h"
 #include "BluetoothA2DPSource.h"
+//#include <WiFi.h>
+//#include <HTTPClient.h>
+//const char* ht = "https://maker.ifttt.com/trigger/button/json/with/key/hJHTcywJ7iXc0wwdjlLyciX2eNoaSV01s2tH-S0GlM2";
 uint32_t Freq = 0;
-
 BluetoothA2DPSource a2dp_source;
 File sound_file;
 const int frame_size_bytes = sizeof(int16_t) * 2;
-const char* file_name = "/audio.raw";
+const char* file_namea = "/audio.raw";
+const char* file_nameb = "/b.raw";
+
 int32_t get_data_channels(Frame* frame, int32_t channel_len) {
   size_t result_len_bytes = sound_file.read((uint8_t*)frame, channel_len * frame_size_bytes );
   int32_t result_len = result_len_bytes / frame_size_bytes;
@@ -15,167 +19,56 @@ int32_t get_data_channels(Frame* frame, int32_t channel_len) {
 }
 
 #define ONE_BIT_MODE true
-void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
-    Serial.printf("Listing directory: %s\n", dirname);
 
-    File root = fs.open(dirname);
-    if(!root){
-        Serial.println("Failed to open directory");
-        return;
-    }
-    if(!root.isDirectory()){
-        Serial.println("Not a directory");
-        return;
-    }
-
-    File file = root.openNextFile();
-    while(file){
-        if(file.isDirectory()){
-            Serial.print("  DIR : ");
-            Serial.println(file.name());
-            if(levels){
-                listDir(fs, file.path(), levels -1);
-            }
-        } else {
-            Serial.print("  FILE: ");
-            Serial.print(file.name());
-            Serial.print("  SIZE: ");
-            Serial.println(file.size());
-        }
-        file = root.openNextFile();
-    }
+//led function
+void led(){
+  digitalWrite(18, HIGH);
+  delay(200);
+  digitalWrite(18, LOW);
+  digitalWrite(19, HIGH);
+  delay(200);
+    digitalWrite(19, LOW);
+  digitalWrite(21, HIGH);
+  delay(200);
+    digitalWrite(21, LOW);
+  digitalWrite(22, HIGH);
+  delay(200);
+    digitalWrite(22, LOW);
+  digitalWrite(23, HIGH);
+  delay(200);
+    digitalWrite(23, LOW);
+  digitalWrite(25, HIGH);
+  delay(200);
+    digitalWrite(25, LOW);
+  digitalWrite(26, HIGH);
+  delay(200);
+    digitalWrite(26, LOW);
+  digitalWrite(27, HIGH);
+  delay(200);
+  digitalWrite(27,LOW);
 }
-
-void createDir(fs::FS &fs, const char * path){
-    Serial.printf("Creating Dir: %s\n", path);
-    if(fs.mkdir(path)){
-        Serial.println("Dir created");
-    } else {
-        Serial.println("mkdir failed");
-    }
-}
-
-void removeDir(fs::FS &fs, const char * path){
-    Serial.printf("Removing Dir: %s\n", path);
-    if(fs.rmdir(path)){
-        Serial.println("Dir removed");
-    } else {
-        Serial.println("rmdir failed");
-    }
-}
-
-void readFile(fs::FS &fs, const char * path){
-    Serial.printf("Reading file: %s\n", path);
-
-    File file = fs.open(path);
-    if(!file){
-        Serial.println("Failed to open file for reading");
-        return;
-    }
-
-    Serial.print("Read from file: ");
-    while(file.available()){
-        Serial.write(file.read());
-    }
-}
-
-void writeFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Writing file: %s\n", path);
-
-    File file = fs.open(path, FILE_WRITE);
-    if(!file){
-        Serial.println("Failed to open file for writing");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("File written");
-    } else {
-        Serial.println("Write failed");
-    }
-}
-
-void appendFile(fs::FS &fs, const char * path, const char * message){
-    Serial.printf("Appending to file: %s\n", path);
-
-    File file = fs.open(path, FILE_APPEND);
-    if(!file){
-        Serial.println("Failed to open file for appending");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("Message appended");
-    } else {
-        Serial.println("Append failed");
-    }
-}
-
-void renameFile(fs::FS &fs, const char * path1, const char * path2){
-    Serial.printf("Renaming file %s to %s\n", path1, path2);
-    if (fs.rename(path1, path2)) {
-        Serial.println("File renamed");
-    } else {
-        Serial.println("Rename failed");
-    }
-}
-
-void deleteFile(fs::FS &fs, const char * path){
-    Serial.printf("Deleting file: %s\n", path);
-    if(fs.remove(path)){
-        Serial.println("File deleted");
-    } else {
-        Serial.println("Delete failed");
-    }
-}
-
-void testFileIO(fs::FS &fs, const char * path){
-    File file = fs.open(path);
-    static uint8_t buf[512];
-    size_t len = 0;
-    uint32_t start = millis();
-    uint32_t end = start;
-    if(file){
-        len = file.size();
-        size_t flen = len;
-        start = millis();
-        while(len){
-            size_t toRead = len;
-            if(toRead > 512){
-                toRead = 512;
-            }
-            file.read(buf, toRead);
-            len -= toRead;
-        }
-        end = millis() - start;
-        Serial.printf("%u bytes read for %u ms\n", flen, end);
-        file.close();
-    } else {
-        Serial.println("Failed to open file for reading");
-    }
-
-
-    file = fs.open(path, FILE_WRITE);
-    if(!file){
-        Serial.println("Failed to open file for writing");
-        return;
-    }
-
-    size_t i;
-    start = millis();
-    for(i=0; i<2048; i++){
-        file.write(buf, 512);
-    }
-    end = millis() - start;
-    Serial.printf("%u bytes written for %u ms\n", 2048 * 512, end);
-    file.close();
-}
-
+const char* ssid = "GlobeAtHome_F8B16_2.4";
+const char* password = "ynhXW79c";
 void setup(){
     Serial.begin(115200);
+//    WiFi.begin(ssid, password);
+//    Serial.println(WiFi.localIP());
     pinMode(2, INPUT_PULLUP);
     pinMode(4, INPUT_PULLUP);
     pinMode(12, INPUT_PULLUP);
     pinMode(13, INPUT_PULLUP);
     pinMode(15, INPUT_PULLUP);
+    pinMode(16, INPUT_PULLUP);
+    pinMode(17, INPUT_PULLUP);
+    pinMode(18, OUTPUT);
+    pinMode(19, OUTPUT);
+    pinMode(21, OUTPUT);
+    pinMode(22, OUTPUT);
+    pinMode(23, OUTPUT);
+    pinMode(25, OUTPUT);
+    pinMode(26, OUTPUT);
+    pinMode(27, OUTPUT);
+
     if(!SD_MMC.begin("/sdcard", ONE_BIT_MODE)){
         Serial.println("Card Mount Failed");
         return;
@@ -201,27 +94,26 @@ void setup(){
     uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
     Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
 
-    listDir(SD_MMC, "/", 0);
-    createDir(SD_MMC, "/mydir");
-    listDir(SD_MMC, "/", 0);
-    removeDir(SD_MMC, "/mydir");
-    listDir(SD_MMC, "/", 2);
-    writeFile(SD_MMC, "/hello.txt", "Hello ");
-    appendFile(SD_MMC, "/hello.txt", "World!\n");
-    readFile(SD_MMC, "/hello.txt");
-    deleteFile(SD_MMC, "/foo.txt");
-    renameFile(SD_MMC, "/hello.txt", "/foo.txt");
-    readFile(SD_MMC, "/foo.txt");
-    testFileIO(SD_MMC, "/test.txt");
-    Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
-    Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
-    sound_file = SD_MMC.open(file_name, FILE_READ);
     Serial.println("starting A2DP...");
     a2dp_source.start("A-4080", get_data_channels);  
 }
 
 void loop(){
-    sound_file = SD_MMC.open(file_name, FILE_READ);
-    Serial.println("starting A2DP...");
-    a2dp_source.start("A-4080", get_data_channels); 
+  while(digitalRead(16)==LOW){
+//    HTTPClient http;
+//    http.begin(ht);
+    sound_file = SD_MMC.open(file_namea, FILE_READ);
+    Serial.println("a");
+    led();
+//    http.end();
+    }
+  while(digitalRead(17)==LOW){
+//    HTTPClient http;
+//    http.begin(ht);
+    sound_file = SD_MMC.open(file_nameb, FILE_READ);
+    Serial.println("b");
+    delay(2950);
+    led();
+//    http.end();
+    }
 }
